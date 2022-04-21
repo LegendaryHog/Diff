@@ -19,6 +19,10 @@ typedef struct Node {
 
 Node*  PlantTree   (tree_t push);
 
+Node*  CpyTree     (Node* tree);
+
+Node*  RecCpyTree  (Node* tree);
+
 int    ChopDown    (Node* tree);
 
 Node*  SetLBranch  (Node* tree, tree_t push);

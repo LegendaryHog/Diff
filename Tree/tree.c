@@ -8,6 +8,37 @@ Node* PlantTree (tree_t push)
     tree->data = push;
     return tree;
 }
+Node* CpyTree (Node* tree)
+{
+    return RecCpyTree (tree);
+}
+
+Node* RecCpyTree (Node* tree)
+{
+    if (tree == NULL)
+    {
+        return NULL;
+    }
+    Node* newtree = PlantTree (tree->data);
+    if (tree->left)
+    {
+        newtree->left = RecCpyTree (tree->left);
+        if (!newtree->left)
+        {
+            return NULL;
+        }
+    }
+    if (tree->right)
+    {
+        newtree->right = RecCpyTree (tree->right);
+        if (!newtree->left)
+        {
+            return NULL;
+        }
+    }
+    return newtree;
+}
+
 
 int ChopDown (Node* tree)
 {

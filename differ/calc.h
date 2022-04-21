@@ -9,6 +9,22 @@
 #include "../lexer/lexer.h"
 #include "../Tree/tree.h"
 
+#define CL CpyTree (ftree->left)
+#define CR CpyTree (ftree->right)
+#define DL RecDif (ftree->left, varname)
+#define DR RecDif (ftree->right, varname)
+#define _ADD_(x, y) BranchOper (ftree, x, y, ADD)
+#define _SUB_(x, y) BranchOper (ftree, x, y, SUB)
+#define _MUL_(x, y) BranchOper (ftree, x, y, MUL)
+#define _DIV_(x, y) BranchOper (ftree, x, y, DIV)
+#define _DEG_(x, y) BranchOper (ftree, x, y, DEG)
+#define _SIN_(x)    BranchFunc (ftree, x, SIN)
+#define _COS_(x)    BranchFunc (ftree, x, COS)
+#define _SQRT_(x)   BranchFunc (ftree, x, SQRT)
+#define _CBRT_(x)   BranchFunc (ftree, x, CBRT)
+#define _LN_(x)     BranchFunc (ftree, x, LN)
+
+
 #define SKIPSPACES f->p += SkipSpaces (f->str + f->p);
 #define ACTLEX f->lexarr->lexs[f->p]
 #define CALC_L CalcTree (tree->left) 
@@ -27,6 +43,16 @@ typedef struct VARARR {
 } vararr;
 
 double SubstitAndCalc (Node* tree, const char* substit);
+
+Node* Differ (Node* ftree, const char* varname);
+
+Node* RecDif (Node* ftree, const char* varname);
+
+Node* BranchFunc (Node* node, Node* val, enum OPERAND oper);
+
+Node* BranchOper (Node* node, Node* val1, Node* val2, enum OPERAND oper);
+
+Node* MakeNum (Node* node, double val);
 
 int    Subtit (Node* tree, const char* subtit);
 

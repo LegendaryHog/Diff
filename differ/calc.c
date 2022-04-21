@@ -8,6 +8,114 @@ const double _PHI_   = 1.618033989;
 
 const lex_t NULLSTRUCT = {};
 
+Node* Differ (Node* ftree, const char* varname)
+{
+    if (!ftree)
+    {
+        fprintf (stderr, "ERROR: null pointer on tree in Differ ()\n");
+        return NULL;
+    }
+    char normvname[VARLEN] = {};
+    //puts (varname);
+    /*sscanf (varname, "%*[ ]%[^ ]", normvname);*/
+    //puts (normvname);
+    Node* res = CpyTree (ftree);
+    return RecDif (res, varname);
+}
+
+Node* BranchOper (Node* node, Node* val1, Node* val2, enum OPERAND oper)
+{
+    if (!val1 || !val2)
+    {
+        return NULL;
+    }
+    if (oper == SIN || oper == COS || oper == SQRT || oper == CBRT || oper == LN)
+    {
+        return NULL;
+    }
+    if (!node)
+        node = PlantTree (NULLSTRUCT);
+    node->data.type = OPER;
+    node->data.val.op = oper;
+    node->left = val1;
+    node->right = val2;
+    return node;
+}
+
+Node* BranchFunc (Node* node, Node* val, enum OPERAND oper)
+{
+    if (!val)
+    {
+        return NULL;
+    }
+    if (oper == ADD || oper == SUB || oper == MUL || oper == DIV || oper == DEG)
+    {
+        return NULL;
+    }
+    if (!node)
+        node = PlantTree (NULLSTRUCT);
+    node->data.type = OPER;
+    node->data.val.op = oper;
+    node->left = val;
+    return node;
+}
+
+Node* MakeNum (Node* node, double val)
+{
+    node->data.type = NUM;
+    node->data.val.num = val;
+    return node;
+}
+
+Node* RecDif (Node* ftree, const char* varname)
+{
+    if (ftree == NULL)
+    {
+        fprintf (stderr, "ERROR: NULL pointer on tree ih RecDif ()\n");
+        return NULL;
+    }
+    if (varname == NULL)
+    {
+        return NULL;
+    }
+    switch (ftree->data.type) {
+        case OPER:
+        {
+            switch (ftree->data.val.op) {
+                case ADD:
+                {
+                    return _ADD_(DL, DR);
+                }
+                case SUB:
+                {
+                    return _SUB_(DL, DR);
+                }
+                case MUL:
+                {
+                    return _ADD_(_MUL_(DL, CR), _MUL_(DR, CL));
+                }
+                case DIV:
+                {
+                    return _DIV_(_SUB_(_MUL_(DL, CR), _MUL_(DR, CL)), _DEG_(CR, MakeNum (ftree,2)));
+                }   
+            }
+        }
+        case NUM: case CONST:
+            return MakeNum (ftree, 0);
+        case VAR:
+            /*printf ("%s (%p)\n", ftree->data.val.var.name, ftree->data.val.var.name);
+            printf ("%s (%p)\n", varname, varname);*/
+            if (strcmp (ftree->data.val.var.name, varname) == 0)
+                return MakeNum (ftree, 1);
+            else
+                return MakeNum (ftree, 0);
+        default:
+            fprintf (stderr, "ERROR: unknown type of node: %d\n", ftree->data.type);
+            return NULL;
+    }
+}
+
+
 double SubstitAndCalc (Node* tree, const char* substit)
 {
     if (Subtit (tree, substit) == 1)
@@ -377,7 +485,7 @@ Node* GetN (formula* f)
     {
         tree->data.type = VAR;
         tree->data.val.var.value = NAN;
-        strcpy (tree->data.val.var.name, ACTLEX.val.var.name);
+        tree->data.val.var.name == ACTLEX.val.var.name;
     }
     f->p++;
     return tree;

@@ -227,7 +227,7 @@ int lexarrFill (lex_arr* lexarr, const char* str)
         {
             lex_t lex = {};
             lex.type = VAR;
-            sscanf (str + p, "%8[^ /*+-^)$]", lex.val.var.name);
+            sscanf (str + p, "%8[^ \n/*+-^)$]", lex.val.var.name);
             p += SkipVar (str + p);
             if (lexarrPush (lexarr, lex) == 1)
                 return 1;

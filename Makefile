@@ -2,10 +2,10 @@ all: compall run
 
 
 compall:
-	gcc Tree/tree.c lexer/lexer.c Calcul/calc.c Calcul/main.c -lm -o calc.out
+	gcc Tree/tree.c lexer/lexer.c differ/calc.c differ/main.c -lm -o diff.out
 
 run:
-	./calc.out
+	./diff.out
 
 valrun:
-	valgrind -s ./calc.out
+	valgrind -s --leak-check=full ./diff.out
