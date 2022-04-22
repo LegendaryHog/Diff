@@ -62,6 +62,8 @@ Node* BranchFunc (Node* node, Node* val, enum OPERAND oper)
 
 Node* MakeNum (Node* node, double val)
 {
+    if (!node)
+        node = PlantTree (NULLSTRUCT);
     node->data.type = NUM;
     node->data.val.num = val;
     return node;
@@ -78,41 +80,50 @@ Node* RecDif (Node* ftree, const char* varname)
     {
         return NULL;
     }
+    Node* l = CpyTree (ftree->left);
+    Node* r = CpyTree (ftree->right);
     switch (ftree->data.type) {
         case OPER:
         {
             switch (ftree->data.val.op) {
                 case ADD:
-                {
-                    return _ADD_(DL, DR);
-                }
+                    _ADD_(DL, DR);
+                    break;
                 case SUB:
-                {
-                    return _SUB_(DL, DR);
-                }
+                    _SUB_(DL, DR);
+                    break;
                 case MUL:
-                {
-                    return _ADD_(_MUL_(DL, CR), _MUL_(DR, CL));
-                }
+                    ftree->data.val.op = ADD;
+                    ftree->left = BranchOper (ftree->left, CL, DR, MUL);
+                    ftree->right = BranchOper (ftree->right, DL, CR, MUL);
+                    break;
                 case DIV:
-                {
-                    return _DIV_(_SUB_(_MUL_(DL, CR), _MUL_(DR, CL)), _DEG_(CR, MakeNum (ftree,2)));
-                }   
+                    ftree->right = BranchOper (ftree->right, CR, MakeNum (NULL, 2), DEG);
+                    ftree->left = BranchOper (ftree->left, BranchOper (NULL, DL, CR, MUL), BranchOper (NULL, CL, DR, MUL), SUB);
+                    break;
+                case DEG:
+
             }
+            break;
         }
         case NUM: case CONST:
-            return MakeNum (ftree, 0);
+            ftree = MakeNum (ftree, 0);
+            break;
         case VAR:
             /*printf ("%s (%p)\n", ftree->data.val.var.name, ftree->data.val.var.name);
             printf ("%s (%p)\n", varname, varname);*/
             if (strcmp (ftree->data.val.var.name, varname) == 0)
-                return MakeNum (ftree, 1);
+                ftree = MakeNum (ftree, 1);
             else
-                return MakeNum (ftree, 0);
+                ftree = MakeNum (ftree, 0);
+            break;
         default:
             fprintf (stderr, "ERROR: unknown type of node: %d\n", ftree->data.type);
             return NULL;
     }
+    ChopDown (l);
+    ChopDown (r);
+    return ftree;
 }
 
 
@@ -485,7 +496,7 @@ Node* GetN (formula* f)
     {
         tree->data.type = VAR;
         tree->data.val.var.value = NAN;
-        tree->data.val.var.name == ACTLEX.val.var.name;
+        strcpy (tree->data.val.var.name, ACTLEX.val.var.name);
     }
     f->p++;
     return tree;

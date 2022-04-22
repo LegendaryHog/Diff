@@ -16,8 +16,6 @@
 #define PHI_LEN 3
 #define NUM_E_LEN 1
 
-
-
 enum OPERAND {
     ADD = '+',
     SUB = '-',

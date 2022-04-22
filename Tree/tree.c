@@ -19,7 +19,11 @@ Node* RecCpyTree (Node* tree)
     {
         return NULL;
     }
-    Node* newtree = PlantTree (tree->data);
+    Node* newtree = (Node*) calloc (1, sizeof (Node));
+    newtree->data.type = tree->data.type;
+    if (newtree->data.type == VAR)
+        strcpy (newtree->data.val.var.name, tree->data.val.var.name);
+    newtree->data = tree->data;
     if (tree->left)
     {
         newtree->left = RecCpyTree (tree->left);

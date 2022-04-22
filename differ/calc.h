@@ -9,10 +9,11 @@
 #include "../lexer/lexer.h"
 #include "../Tree/tree.h"
 
-#define CL CpyTree (ftree->left)
-#define CR CpyTree (ftree->right)
-#define DL RecDif (ftree->left, varname)
-#define DR RecDif (ftree->right, varname)
+#define DL RecDif (CpyTree (l), varname)
+#define DR RecDif (CpyTree (r), varname)
+#define CL CpyTree (l)
+#define CR CpyTree (r)
+
 #define _ADD_(x, y) BranchOper (ftree, x, y, ADD)
 #define _SUB_(x, y) BranchOper (ftree, x, y, SUB)
 #define _MUL_(x, y) BranchOper (ftree, x, y, MUL)
