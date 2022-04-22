@@ -9,10 +9,10 @@
 #include "../lexer/lexer.h"
 #include "../Tree/tree.h"
 
-#define DL RecDif (CpyTree (l), varname)
-#define DR RecDif (CpyTree (r), varname)
-#define CL CpyTree (l)
-#define CR CpyTree (r)
+#define DL RecDif  (ftree->left, varname)
+#define DR RecDif  (ftree->right, varname)
+#define CL CpyTree (ftree->left)
+#define CR CpyTree (ftree->right)
 
 #define _ADD_(x, y) BranchOper (ftree, x, y, ADD)
 #define _SUB_(x, y) BranchOper (ftree, x, y, SUB)
@@ -54,6 +54,8 @@ Node* BranchFunc (Node* node, Node* val, enum OPERAND oper);
 Node* BranchOper (Node* node, Node* val1, Node* val2, enum OPERAND oper);
 
 Node* MakeNum (Node* node, double val);
+
+Node* MakeConst (Node* node, enum CONSTANT con);
 
 int    Subtit (Node* tree, const char* subtit);
 
