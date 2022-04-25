@@ -45,6 +45,16 @@ typedef struct VARARR {
 
 double SubstitAndCalc (Node* tree, const char* substit);
 
+int RecSearchVar (Node* ftree, const char* varname);
+
+int MulOnOne  (Node* ftree);
+
+int MulOnNull (Node* ftree);
+
+int PlusNull  (Node* ftree);
+
+int DivOnOne  (Node* ftree);
+
 Node* Differ (Node* ftree, const char* varname);
 
 Node* RecDif (Node* ftree, const char* varname);

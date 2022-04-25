@@ -5,6 +5,14 @@ size_t gdcounter1 = 0;
 const double _PI_    = 3.1415926535;
 const double _NUM_E_ = 2.7182818284;
 const double _PHI_   = 1.618033989;
+const double EPSILON = 1e-6;
+int DblCmp (double val1, double val2)
+{
+    if (fabs (val1 - val2) < EPSILON)
+        return 1;
+    else
+        return 0;
+}
 
 const lex_t NULLSTRUCT = {};
 
@@ -29,6 +37,113 @@ int RecSearchVar (Node* ftree, const char* varname)
         else
             return 0;
     }
+}
+
+int MulOnOne  (Node* ftree)
+{
+    int done = 0;
+    if (ismul (ftree->data))
+    {
+        if (isnum (ftree->left->data))
+        {
+            if (DblCmp (ftree->left->data.val.num, 1))
+            {
+                ChopDown (ftree->left);
+                ftree->data = ftree->right->data;
+                ftree->right = ftree->right->right;
+                ftree->left = ftree->right->left;
+                done = 1;
+            }
+        }
+        else if (isnum (ftree->right->data))
+        {
+            if (DblCmp (ftree->right->data.val.num, 1))
+            {
+                ChopDown (ftree->left);
+                ftree->data = ftree->left->data;
+                ftree->right = ftree->left->right;
+                ftree->left = ftree->left->left;
+                done = 1;
+            }
+        }
+    }
+    if (ftree->left)
+        done += MulOnOne (ftree->left);
+    if (ftree->right)
+        done += MulOnOne (ftree->right);
+    return done; 
+}
+
+int MulOnNull (Node* ftree)
+{
+    int done = 0;
+    if (ismul (ftree->data))
+    {
+        if (isnum (ftree->left->data))
+        {
+            if (DblCmp (ftree->left->data.val.num, 0))
+            {
+                ChopDown (ftree->left);
+                ChopDown (ftree->right);
+                ftree->left = NULL;
+                ftree->right = NULL;
+                ftree = MakeNum (ftree, 0);
+                done = 1;
+            }
+        }
+        else if (isnum (ftree->right->data))
+        {
+            if (DblCmp (ftree->right->data.val.num, 0))
+            {
+                ChopDown (ftree->left);
+                ChopDown (ftree->right);
+                ftree->left = NULL;
+                ftree->right = NULL;
+                ftree = MakeNum (ftree, 0);
+                done = 1;
+            }
+        }
+    }
+    if (ftree->left)
+        done += MulOnNull (ftree->left);
+    if (ftree->right)
+        done += MulOnNull (ftree->right);
+    return done; 
+}
+
+int PlusNull  (Node* ftree)
+{
+    int done = 0;
+    if (isadd (ftree->data))
+    {
+        if (isnum (ftree->left->data))
+        {
+            if (DblCmp (ftree->left->data.val.num, 0))
+            {
+                ChopDown (ftree->left);
+                ftree->data = ftree->right->data;
+                ftree->right = ftree->right->right;
+                ftree->left = ftree->right->left;
+                done = 1;
+            }
+        }
+        else if (isnum (ftree->right->data))
+        {
+            if (DblCmp (ftree->right->data.val.num, 0))
+            {
+                ChopDown (ftree->left);
+                ftree->data = ftree->left->data;
+                ftree->right = ftree->left->right;
+                ftree->left = ftree->left->left;
+                done = 1;
+            }
+        }
+    }
+    if (ftree->left)
+        done += PlusNull (ftree->left);
+    if (ftree->right)
+        done += PlusNull (ftree->right);
+    return done;
 }
 
 Node* Differ (Node* ftree, const char* varname)
