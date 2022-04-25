@@ -112,47 +112,61 @@ Node* RecDif (Node* ftree, const char* varname)
     switch (ftree->data.type) {
         case OPER:
         {
+            int lfunc = RecSearchVar (ftree->left, varname);
+            int rfunc = RecSearchVar (ftree->right, varname);
+            if (!lfunc && !rfunc)
+                return MakeNum (NULL, 0);
+
             switch (ftree->data.val.op) {
                 case ADD:
-                    if (!RecSearchVar (ftree, varname))
-                        node = MakeNum (node, 0);
-                    BranchOper (node, DL, DR, ADD);
+                    if (!rfunc)
+                        node = DL;
+                    else if (!lfunc)
+                        node = DR;
+                    else
+                        BranchOper (node, DL, DR, ADD);
                     break;
                 case SUB:
-                    if (!RecSearchVar (ftree, varname))
-                        node = MakeNum (node, 0);
+                    if (!rfunc)
+                        node = DL;
+                    else if (!lfunc)
+                        node = DR;
+                    else
                     BranchOper (node, DL, DR, SUB);
                     break;
                 case MUL:
-                    if (!RecSearchVar (ftree, varname))
-                        node = MakeNum (node, 0);
-                    BranchOper (node, BranchOper (NULL, DL, CR, MUL), BranchOper (NULL, DR, CL, MUL), ADD);
+                    if (!lfunc)
+                        node = BranchOper (node, CL, DR, MUL);
+                    else if (!rfunc)
+                        node = BranchOper (node, DL, CR, MUL);
+                    else
+                        node = BranchOper (node, BranchOper (NULL, DL, CR, MUL), BranchOper (NULL, DR, CL, MUL), ADD);
                     break;
                 case DIV:
-                    if (!RecSearchVar (ftree, varname))
-                        node = MakeNum (node, 0);
-                    node->left = BranchOper (NULL, BranchOper (NULL, DL, CR, MUL), BranchOper (NULL, DR, CL, MUL), SUB);
-                    node->right = BranchOper (NULL, CL, MakeNum (NULL, 2), DEG);
-                    BranchOper (node, node->left, node->right, DIV);
+                    if (!lfunc)
+                    {
+                        Node* multl = BranchOper (NULL, MakeNum (NULL, 0), CL, SUB);
+                        Node* degr  = BranchOper (NULL, CR, MakeNum (NULL, 2), DEG);
+                        Node* multr = BranchOper (NULL, DR, degr, DIV);
+                        node = BranchOper (NULL, multl, multr, MUL);
+                    }
+                    else if (!rfunc)
+                        node = BranchOper (node, DL, CR, DIV);
+                    else
+                    {
+                        node->left = BranchOper (NULL, BranchOper (NULL, DL, CR, MUL), BranchOper (NULL, DR, CL, MUL), SUB);
+                        node->right = BranchOper (NULL, CL, MakeNum (NULL, 2), DEG);
+                        BranchOper (node, node->left, node->right, DIV);
+                    }
                     break;
                 case DEG:
-                {
-                    int basefunc = RecSearchVar (ftree->left, varname);
-                    int degfunc  = RecSearchVar (ftree->right, varname);
-                    if (basefunc && degfunc)
-                    {
-                        Node* term1 = BranchOper (NULL, BranchOper (NULL, DL, CR, MUL), CL, DIV);
-                        Node* term2 = BranchOper (NULL, BranchFunc (NULL, CL, LN), DR, MUL);
-                        node->right = BranchOper (NULL, term1, term2, ADD);
-                        node = BranchOper (node, CpyTree (ftree), node->right, MUL);
-                    }
-                    else if (basefunc)
+                    if (!rfunc)
                     {
                         node->right = BranchOper (NULL, DL, CR, MUL);
                         node->left  = BranchOper (NULL, CL, BranchOper (NULL, CR, MakeNum (NULL, 1), SUB), DEG); 
                         node = BranchOper (node, node->left, node->right, MUL);
                     }
-                    else if (degfunc)
+                    else if (!lfunc)
                     {
                         node->left  = BranchOper (NULL, MakeConst (NULL, NUM_E), CR, DEG);
                         node->right = BranchOper (NULL, BranchFunc (NULL, CL, LN), DR, MUL);
@@ -160,18 +174,20 @@ Node* RecDif (Node* ftree, const char* varname)
                     }
                     else
                     {
-                        node = MakeNum (node, 0);
+                        Node* term1 = BranchOper (NULL, BranchOper (NULL, DL, CR, MUL), CL, DIV);
+                        Node* term2 = BranchOper (NULL, BranchFunc (NULL, CL, LN), DR, MUL);
+                        node->right = BranchOper (NULL, term1, term2, ADD);
+                        node = BranchOper (node, CpyTree (ftree), node->right, MUL);
                     }
                     break;
-                }
                 case SIN:
-                    if (RecSearchVar (ftree->left, varname))
-                        node = BranchOper (node, BranchFunc (NULL, CL, COS), DL, MUL);
-                    else
+                    if (!lfunc)
                         node = MakeNum (node, 0);
+                    else
+                        node = BranchOper (node, BranchFunc (NULL, CL, COS), DL, MUL);
                     break;
                 case COS:
-                    if (!RecSearchVar (ftree->left, varname))
+                    if (!lfunc)
                         node = MakeNum (node, 0);
                     else
                     {
@@ -180,7 +196,7 @@ Node* RecDif (Node* ftree, const char* varname)
                     }
                     break;
                 case SQRT:
-                    if (!RecSearchVar (ftree->left, varname))
+                    if (!lfunc)
                         node = MakeNum (node, 0);
                     else
                     {
@@ -189,7 +205,7 @@ Node* RecDif (Node* ftree, const char* varname)
                     }
                     break;
                 case CBRT:
-                    if (!RecSearchVar (ftree->left, varname))
+                    if (!lfunc)
                         node = MakeNum (node, 0);
                     else 
                     {
@@ -199,12 +215,10 @@ Node* RecDif (Node* ftree, const char* varname)
                     }
                     break;
                 case LN:
-                    if (!RecSearchVar (ftree->left, varname))
+                    if (!lfunc)
                         node = MakeNum (node, 0);
                     else
-                    {
                         node = BranchOper (node, DL, CL, DIV);
-                    }
                     break;
             }
             break;
