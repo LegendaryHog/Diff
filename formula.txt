@@ -1,1 +1,1 @@
-sinx
+sinx ^ 2

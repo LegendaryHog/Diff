@@ -16,6 +16,20 @@ int DblCmp (double val1, double val2)
 
 const lex_t NULLSTRUCT = {};
 
+size_t HashFunc (Node* ftree)
+{
+    size_t hash = 0;
+    for (size_t i = 0; i < sizeof (Node); i++)
+    {
+        hash += ((char*)ftree)[i] * ((char*)ftree)[i] / 2;
+    }
+    if (ftree->left)
+        hash += HashFunc (ftree->left);
+    if (ftree->right)
+        hash += HashFunc (ftree->right);
+    return hash;
+}
+
 int RecSearchVar (Node* ftree, const char* varname)
 {
     if (!ftree)
@@ -39,9 +53,31 @@ int RecSearchVar (Node* ftree, const char* varname)
     }
 }
 
-int MulOnOne  (Node* ftree)
+Node* Simp (Node* ftree)
 {
-    int done = 0;
+    if (!ftree)
+        return NULL;
+    size_t hash1 = HashFunc (ftree);
+    size_t hash2 = HashFunc (ftree) - 1;
+    while (hash1 != hash2)
+    {
+        hash1 = HashFunc (ftree);
+
+        ftree = MulOnOne (ftree);
+        ftree = MulOnNull (ftree);
+        ftree = PlusNull (ftree);
+        ftree = DivOnOne (ftree);
+        ftree = CalcNums (ftree);
+        ftree = InPowOne (ftree);
+
+        hash2 = HashFunc (ftree);
+    }
+    return ftree;
+}
+
+
+Node* MulOnOne  (Node* ftree)
+{
     if (ismul (ftree->data))
     {
         if (isnum (ftree->left->data))
@@ -49,34 +85,31 @@ int MulOnOne  (Node* ftree)
             if (DblCmp (ftree->left->data.val.num, 1))
             {
                 ChopDown (ftree->left);
-                ftree->data = ftree->right->data;
-                ftree->right = ftree->right->right;
-                ftree->left = ftree->right->left;
-                done = 1;
+                Node* old = ftree;
+                ftree = ftree->right;
+                free (old);
             }
         }
         else if (isnum (ftree->right->data))
         {
             if (DblCmp (ftree->right->data.val.num, 1))
             {
-                ChopDown (ftree->left);
-                ftree->data = ftree->left->data;
-                ftree->right = ftree->left->right;
-                ftree->left = ftree->left->left;
-                done = 1;
+                ChopDown (ftree->right);
+                Node* old = ftree;
+                ftree = ftree->left;
+                free (old);
             }
         }
     }
     if (ftree->left)
-        done += MulOnOne (ftree->left);
+        ftree->left = MulOnOne (ftree->left);
     if (ftree->right)
-        done += MulOnOne (ftree->right);
-    return done; 
+        ftree->right = MulOnOne (ftree->right);
+    return ftree;
 }
 
-int MulOnNull (Node* ftree)
+Node* MulOnNull (Node* ftree)
 {
-    int done = 0;
     if (ismul (ftree->data))
     {
         if (isnum (ftree->left->data))
@@ -88,10 +121,9 @@ int MulOnNull (Node* ftree)
                 ftree->left = NULL;
                 ftree->right = NULL;
                 ftree = MakeNum (ftree, 0);
-                done = 1;
             }
         }
-        else if (isnum (ftree->right->data))
+        if (isnum (ftree->right->data))
         {
             if (DblCmp (ftree->right->data.val.num, 0))
             {
@@ -100,18 +132,17 @@ int MulOnNull (Node* ftree)
                 ftree->left = NULL;
                 ftree->right = NULL;
                 ftree = MakeNum (ftree, 0);
-                done = 1;
             }
         }
     }
     if (ftree->left)
-        done += MulOnNull (ftree->left);
+        ftree->left = MulOnOne (ftree->left);
     if (ftree->right)
-        done += MulOnNull (ftree->right);
-    return done; 
+        ftree->right = MulOnOne (ftree->right);
+    return ftree;
 }
 
-int PlusNull  (Node* ftree)
+Node* PlusNull  (Node* ftree)
 {
     int done = 0;
     if (isadd (ftree->data))
@@ -121,31 +152,148 @@ int PlusNull  (Node* ftree)
             if (DblCmp (ftree->left->data.val.num, 0))
             {
                 ChopDown (ftree->left);
-                ftree->data = ftree->right->data;
-                ftree->right = ftree->right->right;
-                ftree->left = ftree->right->left;
-                done = 1;
+                Node* old = ftree;
+                ftree = ftree->right;
+                free (old);
             }
         }
         else if (isnum (ftree->right->data))
         {
             if (DblCmp (ftree->right->data.val.num, 0))
             {
-                ChopDown (ftree->left);
-                ftree->data = ftree->left->data;
-                ftree->right = ftree->left->right;
-                ftree->left = ftree->left->left;
-                done = 1;
+                ChopDown (ftree->right);
+                Node* old = ftree;
+                ftree = ftree->left;
+                free (old);
             }
         }
     }
     if (ftree->left)
-        done += PlusNull (ftree->left);
+        ftree->left = MulOnOne (ftree->left);
     if (ftree->right)
-        done += PlusNull (ftree->right);
-    return done;
+        ftree->right = MulOnOne (ftree->right);
+    return ftree;
 }
 
+Node* DivOnOne  (Node* ftree)
+{
+    if (isdiv (ftree->data))
+    {
+        if (isnum (ftree->right->data))
+        {
+            if (DblCmp (ftree->right->data.val.num, 1))
+            {
+                ChopDown (ftree->right);
+                Node* old = ftree;
+                ftree = ftree->left;
+                free (old);
+            }
+        }
+    }
+    if (ftree->left)
+        ftree->left = MulOnOne (ftree->left);
+    if (ftree->right)
+        ftree->right = MulOnOne (ftree->right);
+    return ftree;
+}
+
+Node* InPowOne  (Node* ftree)
+{
+    if (isdeg (ftree->data))
+    {
+        if (isnum (ftree->right->data))
+        {
+            if (DblCmp (ftree->right->data.val.num, 1))
+            {
+                ChopDown (ftree->right);
+                Node* old = ftree;
+                ftree = ftree->left;
+                free (old);
+            }
+        }
+    }
+    if (ftree->left)
+        ftree->left = InPowOne (ftree->left);
+    if (ftree->right)
+        ftree->right = InPowOne (ftree->right);
+    return ftree;
+}
+
+Node* CalcNums  (Node* ftree)
+{
+    if (ftree->data.type == OPER)
+    {
+        int nums = 0;
+        double num1 = 0;
+        double num2 = 0;
+        if (isfun (ftree->data))
+        {
+            if (!ftree->left->left && !ftree->left->right && isnum (ftree->left->data))
+            {
+                nums = 1;
+                num1 = ftree->left->data.val.num;
+                ChopDown (ftree->left);
+                ftree->left = NULL;     
+            }
+        }
+        else
+        {
+            if (!ftree->left->left && !ftree->left->right && !ftree->right->left && !ftree->right->right && isnum (ftree->left->data) && isnum (ftree->right->data))
+            {
+                nums = 1;
+                num1 = ftree->left->data.val.num;
+                num2 = ftree->right->data.val.num;
+                ChopDown (ftree->left);
+                ChopDown (ftree->right);
+                ftree->left = NULL;
+                ftree->right = NULL;
+            }
+        }
+        if (nums == 1)
+        {
+            switch (ftree->data.val.op) {
+                case ADD:
+                    ftree = MakeNum (ftree, num1 + num2);
+                    break;
+                case SUB:
+                    ftree = MakeNum (ftree, num1 - num2);
+                    break;
+                case MUL:
+                    ftree = MakeNum (ftree, num1 * num2);
+                    break;
+                case DIV:
+                    ftree = MakeNum (ftree, num1 / num2);
+                    break;
+                case DEG:
+                    ftree = MakeNum (ftree, pow (num1, num2));
+                    break;
+                case SIN:
+                    ftree = MakeNum (ftree, sin (num1));
+                    break;
+                case COS:
+                    ftree = MakeNum (ftree, cos (num1));
+                    break;
+                case SQRT:
+                    ftree = MakeNum (ftree, sqrt (num1));
+                    break;
+                case CBRT:
+                    ftree = MakeNum (ftree, cbrt (num1));
+                    break;
+                case LN:
+                    ftree = MakeNum (ftree, log (num1));
+                    break;
+                default:
+                    fprintf (stderr, "ERROR: unknown type in CalcNums ()\n");
+                    break;
+            }
+        }    
+    }
+    if (ftree->left)
+        ftree->left = CalcNums (ftree->left);
+    if (ftree->right)
+        ftree->right = CalcNums (ftree->right);
+    return ftree;
+}
 Node* Differ (Node* ftree, const char* varname)
 {
     if (!ftree)
@@ -870,6 +1018,14 @@ int isdeg (lex_t lexem)
         return 1;
     else
         return 0;  
+}
+
+int isfun (lex_t lexem)
+{
+    if (issin (lexem) || iscos (lexem) || issqrt (lexem) || iscbrt (lexem) || isln (lexem))
+        return 1;
+    else
+        return 0;
 }
 
 int issin (lex_t lexem)

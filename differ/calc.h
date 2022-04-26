@@ -47,13 +47,21 @@ double SubstitAndCalc (Node* tree, const char* substit);
 
 int RecSearchVar (Node* ftree, const char* varname);
 
-int MulOnOne  (Node* ftree);
+Node* MulOnOne  (Node* ftree);
 
-int MulOnNull (Node* ftree);
+Node* MulOnNull (Node* ftree);
 
-int PlusNull  (Node* ftree);
+Node* PlusNull  (Node* ftree);
 
-int DivOnOne  (Node* ftree);
+Node* DivOnOne  (Node* ftree);
+
+Node* CalcNums  (Node* ftree);
+
+Node* InPowOne  (Node* ftree);
+
+size_t HashFunc (Node* ftree);
+
+Node* Simp (Node* ftree);
 
 Node* Differ (Node* ftree, const char* varname);
 
@@ -115,6 +123,8 @@ int ismul (lex_t lexem);
 int isdiv (lex_t lexem);
 
 int isdeg (lex_t lexem);
+
+int isfun (lex_t lexem);
 
 int issin (lex_t lexem);
 

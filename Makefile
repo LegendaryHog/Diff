@@ -9,3 +9,6 @@ run:
 
 valrun:
 	valgrind -s --leak-check=full ./diff.out
+
+dbgcomp:
+	gcc Tree/tree.c lexer/lexer.c differ/calc.c differ/main.c -lm -g -o diff.out

@@ -26,6 +26,8 @@ int main (void)
     Node* dtree = Differ (res, "x");
     FormulaDump (dtree);
     TreeDbgDump (dtree);
+    Node* stree = Simp (dtree);
+    FormulaDump (stree);
     lexarrDtor (f->lexarr);
     free (f->str);
     free (f);
