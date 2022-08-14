@@ -294,6 +294,7 @@ Node* CalcNums  (Node* ftree)
         ftree->right = CalcNums (ftree->right);
     return ftree;
 }
+
 Node* Differ (Node* ftree, const char* varname)
 {
     if (!ftree)
@@ -301,7 +302,6 @@ Node* Differ (Node* ftree, const char* varname)
         fprintf (stderr, "ERROR: null pointer on tree in Differ ()\n");
         return NULL;
     }
-    char normvname[VARLEN] = {};
     return RecDif (ftree, varname);
 }
 
@@ -682,16 +682,11 @@ double CalcTree (Node* tree)
 }
 
 Node* GetG (formula* f)
-{
-    //printf ("call GetG: p = %zd\n", f->p);
-    
+{   
     Node* val = GetE (f);
     
     if (!isend (ACTLEX))
-    {
-        //printf ("\npee pee poo poo\n");
         return SyntaxError (f);
-    }
     else
         return val;
 }
@@ -785,8 +780,6 @@ int powint (int base, int deg)
 
 Node* GetP (formula* f)
 {
-    //printf ("call GetP: p = %zd\n", f->p);
-    
     if (islbr (ACTLEX))
     {
         f->p++;

@@ -43,6 +43,10 @@ typedef struct VARARR {
     size_t capacity;
 } vararr;
 
+int TreeCmp (Node* tree1, Node* tree2);
+
+int DataCmp (lex_t data1, lex_t data2);
+
 double SubstitAndCalc (Node* tree, const char* substit);
 
 int RecSearchVar (Node* ftree, const char* varname);
